@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserAuthController extends Controller
 {
@@ -11,11 +14,10 @@ class UserAuthController extends Controller
     {
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'numeric', 'max:20'],
+            'phone' => ['required', 'numeric'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
-            'status' => ['required', 'string', 'in:active,inactive,banned'],
         ]);
 
         $user = User::create([
@@ -23,12 +25,11 @@ class UserAuthController extends Controller
             'phone' => $validatedData['phone'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            'status' => $validatedData['status'],
         ]);
 
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
 
-        return response(['token' => $token], 200);
+        return response([ 'user' => $user, 'token' => $token], 200);
     }
 
     public function login(Request $request)

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -29,23 +29,41 @@ class UserAuthController extends Controller
 
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
 
-        return response([ 'user' => $user, 'token' => $token], 200);
+        return response([
+            'message' => 'Register Success',
+            'data' => $user,
+            'token_type' => 'Bearer',
+            'access_token' => $token,
+        ], 200);
     }
 
     public function login(Request $request)
-{
-    $validatedData = $request->validate([
-        'email' => ['required', 'string', 'email'],
-        'password' => ['required', 'string'],
-    ]);
+    {
+        $validatedData = $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+        ]);
 
-    if (!Auth::attempt($validatedData)) {
-        return response(['message' => 'Invalid credentials'], 401);
+        if (!Auth::attempt($validatedData)) {
+            return response(['message' => 'Invalid credentials'], 401);
+        }
+
+        $user = Auth::user();
+        $token = $user->createToken('Laravel Password Grant Client')->accessToken;
+
+        return response([
+            'message' => 'Login Success',
+            'data' => auth()->user(),
+            'token_type' => 'Bearer',
+            'access_token' => $token,
+        ], 200);
     }
 
-    $user = Auth::user();
-    $token = $user->createToken('Laravel Password Grant Client')->accessToken;
-
-    return response(['token' => $token], 200);
-}
+    public function logout (Request $request) {
+        $token = $request->user()->token();
+        $token->revoke();
+        return response()->json([
+            'message' => 'Successfully logged out',
+        ],200);
+    }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug');
             $table->string('description');
-            $table->foreignId('file_id');
+            $table->foreignId('file_id')->nullable();
             $table->timestamps();
         });
     }

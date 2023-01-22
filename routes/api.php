@@ -22,7 +22,8 @@ use App\Http\Controllers\Auth\UserAuthController;
 Route::post('register', [UserAuthController::class, 'register']);
 Route::post('login', [UserAuthController::class, 'login']);
 
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['auth:api','xss'])->group(function () {
     Route::post('logout', [UserAuthController::class, 'logout']);
 
+    
 });

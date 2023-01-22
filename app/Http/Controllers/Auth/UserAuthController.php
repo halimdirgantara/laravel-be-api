@@ -26,7 +26,7 @@ class UserAuthController extends Controller
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
         ]);
-
+        $user->syncRoles('User');
         $token = $user->createToken('Laravel Password Grant Client')->accessToken;
 
         return response([

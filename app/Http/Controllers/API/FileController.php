@@ -14,7 +14,25 @@ class FileController extends Controller
      */
     public function index()
     {
-        //
+        $user = auth()->user();
+
+        // get the file by user id
+        $files = File::where('user_id', $user->id)->paginate(10);
+
+        // get all the files if Admin or Super Admin
+        if ($user->hasRole('Admin') || $user->hasRole('Super Admin')) {
+            $files = File::paginate(10);
+        }
+
+        $message = 'File retrieved successfully';
+        if (empty($files)) {
+            $message = 'No files were retrieved';
+        }
+
+        return response()->json([
+            'message' => $message,
+            'data' => $files,
+        ], 200);
     }
 
     /**
@@ -42,6 +60,7 @@ class FileController extends Controller
         $path = $file->store('files');
         $size = $file->getSize();
         $file_type = $file->getMimeType();
+        $user_id = Auth::user()->id;
 
         $file = File::create([
             'name' => $validatedData['name'],
@@ -49,12 +68,13 @@ class FileController extends Controller
             'path' => $path,
             'file_type' => $file_type,
             'description' => $validatedData['description'],
-            'size' => $size
+            'size' => $size,
+            'user_id' => $user_id,
         ]);
 
         return response()->json([
             'message' => 'File uploaded successfully',
-            'data' => $file
+            'data' => $file,
         ], 201);
     }
 
@@ -70,6 +90,33 @@ class FileController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $file = File::find($id);
+
+        if (!$file) {
+            return response()->json([
+                'message' => 'File not found',
+            ], 404);
+        }
+        $user = auth()->user();
+        if ($file->user_id !== $user->id && !$user->hasRole('Admin') && !$user->hasRole('Super Admin')) {
+            return response()->json([
+                'message' => 'Forbidden',
+            ], 403);
+        }
+        return response()->json([
+            'message' => 'File retrieved successfully',
+            'data' => $file,
+        ], 200);
+    }
+
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -78,7 +125,57 @@ class FileController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|string',
+            'file' => 'nullable|file',
+            'description' => 'nullable|string',
+        ]);
+
+        // get the file
+        $file = File::find($id);
+
+        //check if the file exists
+        if (!$file) {
+            return response()->json([
+                'message' => 'File not found',
+            ], 404);
+        }
+
+        //check if the file owner is user except Admin or Super Admin
+        $user = auth()->user();
+        if ($file->user_id !== $user->id && !$user->hasRole('Admin') && !$user->hasRole('Super Admin')) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        if ($request->hasFile('file')) {
+            // Handle the file upload
+            $newFile = $request->file('file');
+            $path = $newFile->store('files');
+            $size = $newFile->getSize();
+            $file_type = $newFile->getMimeType();
+
+            //delete old file
+            Storage::delete($file->file);
+
+            $file->name = $validatedData['name'];
+            $file->file = $path;
+            $file->path = $path;
+            $file->file_type = $file_type;
+            $file->size = $size;
+            $file->description = $validatedData['description'];
+            $file->save();
+        } else {
+            $file->name = $validatedData['name'];
+            $file->description = $validatedData['description'];
+            $file->save();
+        }
+
+        return response()->json([
+            'message' => 'File updated successfully',
+            'data' => $file,
+        ], 200);
     }
 
     /**
@@ -89,6 +186,26 @@ class FileController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $file = File::find($id);
+
+        if (!$file) {
+            return response()->json([
+                'message' => 'File not found',
+            ], 404);
+        }
+        $user = auth()->user();
+        if ($file->user_id !== $user->id && !$user->hasRole('admin') && !$user->hasRole('super_admin')) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+        //delete file from storage
+        Storage::delete($file->file);
+        //delete file from database
+        $file->delete();
+
+        return response()->json([
+            'message' => 'File deleted successfully',
+        ], 200);
     }
 }

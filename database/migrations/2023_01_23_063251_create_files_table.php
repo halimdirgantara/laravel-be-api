@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->bigInteger('size');
             $table->bigInteger('downloaded')->default(0);
+            $table->foreignId('user_id');
             $table->timestamps();
         });
     }

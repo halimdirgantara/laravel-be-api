@@ -2,11 +2,19 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Services\FileService;
+use App\Http\Controllers\Controller;
 
 class FileController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -97,13 +105,8 @@ class FileController extends Controller
      */
     public function edit($id)
     {
-        $file = File::find($id);
+        $file = $this->fileService->getFile($id);
 
-        if (!$file) {
-            return response()->json([
-                'message' => 'File not found',
-            ], 404);
-        }
         $user = auth()->user();
         if ($file->user_id !== $user->id && !$user->hasRole('Admin') && !$user->hasRole('Super Admin')) {
             return response()->json([
@@ -132,14 +135,7 @@ class FileController extends Controller
         ]);
 
         // get the file
-        $file = File::find($id);
-
-        //check if the file exists
-        if (!$file) {
-            return response()->json([
-                'message' => 'File not found',
-            ], 404);
-        }
+        $file = $this->fileService->getFile($id);
 
         //check if the file owner is user except Admin or Super Admin
         $user = auth()->user();
@@ -186,13 +182,8 @@ class FileController extends Controller
      */
     public function destroy($id)
     {
-        $file = File::find($id);
+        $file = $this->fileService->getFile($id);
 
-        if (!$file) {
-            return response()->json([
-                'message' => 'File not found',
-            ], 404);
-        }
         $user = auth()->user();
         if ($file->user_id !== $user->id && !$user->hasRole('admin') && !$user->hasRole('super_admin')) {
             return response()->json([

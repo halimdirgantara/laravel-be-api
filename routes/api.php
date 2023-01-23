@@ -26,6 +26,6 @@ Route::post('login', [UserAuthController::class, 'login']);
 Route::middleware(['auth:api','xss'])->group(function () {
     Route::post('logout', [UserAuthController::class, 'logout']);
 
-    Route::resource('file', FileController::class);
+    Route::resource('file', FileController::class)->middleware(['file.ownership' => ['update', 'destroy']]);
 
 });

@@ -66,4 +66,10 @@ class UserAuthController extends Controller
             'message' => 'Successfully logged out',
         ],200);
     }
+
+    public function unauthenticated (Request $request) {
+        return response()->json([
+            'message' => 'Forbidden!',
+        ],403);
+    }
 }

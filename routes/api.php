@@ -21,11 +21,12 @@ use App\Http\Controllers\Auth\UserAuthController;
 // });
 
 Route::post('register', [UserAuthController::class, 'register']);
-Route::post('login', [UserAuthController::class, 'login']);
+Route::post('login', [UserAuthController::class, 'login'])->name('login');
+Route::get('unauthenticated', [UserAuthController::class, 'unauthenticated'])->name('unauthenticated');
 
 Route::middleware(['auth:api','xss'])->group(function () {
     Route::post('logout', [UserAuthController::class, 'logout']);
 
-    Route::resource('file', FileController::class)->middleware(['file.ownership' => ['update', 'destroy']]);
-
+    Route::resource('file', FileController::class);
 });
+

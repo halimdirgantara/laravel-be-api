@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\File;
 use Illuminate\Http\Request;
 use App\Services\FileService;
 use App\Http\Controllers\Controller;
@@ -26,15 +27,16 @@ class FileController extends Controller
 
         // get the file by user id
         $files = File::where('user_id', $user->id)->paginate(10);
-
         // get all the files if Admin or Super Admin
         if ($user->hasRole('Admin') || $user->hasRole('Super Admin')) {
             $files = File::paginate(10);
         }
 
+        // dd(count($files));
         $message = 'File retrieved successfully';
-        if (empty($files)) {
+        if (count($files) < 1) {
             $message = 'No files were retrieved';
+            $files = NULL;
         }
 
         return response()->json([
@@ -106,13 +108,8 @@ class FileController extends Controller
     public function edit($id)
     {
         $file = $this->fileService->getFile($id);
+        $file = $this->fileService->checkFileOwnership($id);
 
-        $user = auth()->user();
-        if ($file->user_id !== $user->id && !$user->hasRole('Admin') && !$user->hasRole('Super Admin')) {
-            return response()->json([
-                'message' => 'Forbidden',
-            ], 403);
-        }
         return response()->json([
             'message' => 'File retrieved successfully',
             'data' => $file,
@@ -138,12 +135,7 @@ class FileController extends Controller
         $file = $this->fileService->getFile($id);
 
         //check if the file owner is user except Admin or Super Admin
-        $user = auth()->user();
-        if ($file->user_id !== $user->id && !$user->hasRole('Admin') && !$user->hasRole('Super Admin')) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
-        }
+        $file = $this->fileService->checkFileOwnership($id);
 
         if ($request->hasFile('file')) {
             // Handle the file upload
@@ -184,12 +176,8 @@ class FileController extends Controller
     {
         $file = $this->fileService->getFile($id);
 
-        $user = auth()->user();
-        if ($file->user_id !== $user->id && !$user->hasRole('admin') && !$user->hasRole('super_admin')) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 403);
-        }
+        $file = $this->fileService->checkFileOwnership($id);
+
         //delete file from storage
         Storage::delete($file->file);
         //delete file from database

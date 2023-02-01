@@ -2,6 +2,7 @@
 
 namespace App\Services;
 use App\Models\File;
+use Illuminate\Support\Facades\Auth;
 
 class FileService
 {
@@ -16,13 +17,12 @@ class FileService
     }
 
     public function checkFileOwnership($id) {
-        $file = File::find($id);
-        $user = auth()->user();
-        if($file->user_id !== $user->id || (!$user->hasRole('Admin') || !$user->hasRole('Super Admin')) ) {
+        $user = Auth::user();
+        if($id != $user->id && (!$user->hasRole('Admin') || !$user->hasRole('Super Admin')) ) {
             return response()->json([
                 'message' => 'Forbidden'
             ], 403);
         }
-        return $file;
+        return true;
     }
 }

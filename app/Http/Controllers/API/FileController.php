@@ -6,6 +6,7 @@ use App\Models\File;
 use Illuminate\Http\Request;
 use App\Services\FileService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class FileController extends Controller
 {
@@ -56,12 +57,7 @@ class FileController extends Controller
         // Validate the request
         $validatedData = $request->validate([
             'name' => 'required|string',
-            'file' => 'required|file|mimetypes:application/pdf,
-                        application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
-                        application/vnd.ms-excel,
-                        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
-                        application/jpeg,application/png,application/jpg,application/gif
-                        ,application/webp, application/svg',
+            'file' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,pdf,doc,docx,xls,xlsx,csv,pptx,ppt,pps,ppsx',
             'description' => 'nullable|string',
         ]);
 
@@ -96,7 +92,14 @@ class FileController extends Controller
      */
     public function show($id)
     {
-        //
+        //get file by id
+        $file = $this->fileService->getFile($id);
+        //check file ownership
+        $this->fileService->checkFileOwnership($file->user_id);
+        return response()->json([
+            'message' => 'File retrieved successfully',
+            'data' => $file,
+        ], 200);
     }
 
     /**
@@ -107,8 +110,10 @@ class FileController extends Controller
      */
     public function edit($id)
     {
+        //get file by id
         $file = $this->fileService->getFile($id);
-        $file = $this->fileService->checkFileOwnership($id);
+        //check file ownership
+        $this->fileService->checkFileOwnership($file->user_id);
 
         return response()->json([
             'message' => 'File retrieved successfully',

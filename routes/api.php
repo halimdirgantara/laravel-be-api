@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\FileController;
+use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\Auth\UserAuthController;
 
 /*
@@ -28,5 +29,6 @@ Route::middleware(['auth:api','xss'])->group(function () {
     Route::post('logout', [UserAuthController::class, 'logout']);
 
     Route::resource('file', FileController::class);
+    Route::resource('category', CategoryController::class);
 });
 

@@ -33,7 +33,6 @@ class FileController extends Controller
             $files = File::paginate(10);
         }
 
-        // dd(count($files));
         $message = 'File retrieved successfully';
         if (count($files) < 1) {
             $message = 'No files were retrieved';
@@ -68,6 +67,7 @@ class FileController extends Controller
         $file_type = $file->getMimeType();
         $user_id = Auth::user()->id;
 
+        //Save the file
         $file = File::create([
             'name' => $validatedData['name'],
             'file' => $path,
@@ -96,6 +96,7 @@ class FileController extends Controller
         $file = $this->fileService->getFile($id);
         //check file ownership
         $this->fileService->checkFileOwnership($file->user_id);
+
         return response()->json([
             'message' => 'File retrieved successfully',
             'data' => $file,
@@ -130,9 +131,10 @@ class FileController extends Controller
      */
     public function update(Request $request, $id)
     {
+        //validate request
         $validatedData = $request->validate([
             'name' => 'required|string',
-            'file' => 'nullable|file',
+            'file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,pdf,doc,docx,xls,xlsx,csv,pptx,ppt,pps,ppsx',
             'description' => 'nullable|string',
         ]);
 
@@ -140,7 +142,7 @@ class FileController extends Controller
         $file = $this->fileService->getFile($id);
 
         //check if the file owner is user except Admin or Super Admin
-        $file = $this->fileService->checkFileOwnership($id);
+        $this->fileService->checkFileOwnership($file->user_id);
 
         if ($request->hasFile('file')) {
             // Handle the file upload
@@ -148,6 +150,7 @@ class FileController extends Controller
             $path = $newFile->store('files');
             $size = $newFile->getSize();
             $file_type = $newFile->getMimeType();
+            $user_id = Auth::user()->id;
 
             //delete old file
             Storage::delete($file->file);

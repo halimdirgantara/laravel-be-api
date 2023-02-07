@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class File extends Model
 {
@@ -12,4 +13,8 @@ class File extends Model
     protected $fillable = [
         'name', 'file', 'path', 'file_type', 'description', 'size', 'downloaded', 'user_id'
     ];
+
+    public function categories() {
+        return $this->hasMany(Category::class);
+    }
 }

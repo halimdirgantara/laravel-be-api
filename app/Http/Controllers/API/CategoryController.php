@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\File;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -88,7 +89,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'message' => 'Category added successfully',
-            'data' => $category,
+            'data' => $category->load('file'),
         ], 201);
 
     }
@@ -101,7 +102,12 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
+        $category = Category::with('file')->find($id);
+
+        return response()->json([
+            'message' => 'Category retrieved successfully',
+            'data' => $category,
+        ], 200);
     }
 
     /**
@@ -112,7 +118,12 @@ class CategoryController extends Controller
      */
     public function edit($id)
     {
-        //
+        $category = Category::with('file')->find($id);
+
+        return response()->json([
+            'message' => 'Category retrieved successfully',
+            'data' => $category,
+        ], 200);
     }
 
     /**

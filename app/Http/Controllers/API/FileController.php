@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\File;
-use Illuminate\Http\Request;
-use App\Services\FileService;
 use App\Http\Controllers\Controller;
+use App\Models\File;
+use App\Services\FileService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class FileController extends Controller
@@ -36,7 +36,7 @@ class FileController extends Controller
         $message = 'File retrieved successfully';
         if (count($files) < 1) {
             $message = 'No files were retrieved';
-            $files = NULL;
+            $files = null;
         }
 
         return response()->json([
@@ -182,17 +182,30 @@ class FileController extends Controller
      */
     public function destroy($id)
     {
+            // return response()->json([
+            //     'message' => 'File can not be deleted from storage.',
+            // ], 403);
         $file = $this->fileService->getFile($id);
+        $this->fileService->checkFileOwnership($id);
 
-        $file = $this->fileService->checkFileOwnership($id);
+        //how to check file that is not have foreign id in other tables?
 
-        //delete file from storage
-        Storage::delete($file->file);
-        //delete file from database
-        $file->delete();
+        $relations = $file->has('categories')->first();
+        if (empty($relations)) {
+            // The file table doesn't have any relationships with other tables
 
-        return response()->json([
-            'message' => 'File deleted successfully',
-        ], 200);
+            //delete file from storage
+            Storage::delete($file->file);
+            //delete file from database
+            $file->delete();
+
+            return response()->json([
+                'message' => 'File deleted successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'File failed to be deleted!',
+            ], 401);
+        }
     }
 }

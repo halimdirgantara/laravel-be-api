@@ -197,6 +197,21 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $category = Category::find($id);
+        $categoryFile = $this->fileService->getFile($category->file_id);
+
+        //added later
+        //$relations = $file->has('posts')->first();
+
+        //delete file from storage
+        Storage::delete($categoryFile->file);
+        //delete file from database
+        $categoryFile->delete();
+        //delete category from database
+        $category->delete();
+
+        return response()->json([
+            'message' => 'Category deleted successfully',
+        ], 200);
     }
 }
